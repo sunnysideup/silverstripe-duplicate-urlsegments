@@ -1,0 +1,29 @@
+{
+    "name": "sunnysideup/duplicate-urlsegments",
+    "type": "silverstripe-vendormodule",
+    "description": "Remove duplicate URLSegments (e.g. my-page-2)",
+    "keywords": [
+        "Silverstripe-CMS",
+        "CMS",
+        "Silverstripe",
+        "URLSegments",
+        "Link",
+        "Duplicate"
+    ],
+    "license": "BSD-3-Clause",
+    "authors": [
+        {
+            "name": "Nicolaas Francken",
+            "email": "modules@sunnysideup.co.nz",
+            "role": "lead developer"
+        }
+    ],
+    "require": {
+        "silverstripe/recipe-core": "~4.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Sunnysideup\\DuplicateURLSegments\\": "src/"
+        }
+    }
+}
