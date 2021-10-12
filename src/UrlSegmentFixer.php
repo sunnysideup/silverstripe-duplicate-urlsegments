@@ -34,7 +34,7 @@ class UrlSegmentFixer extends BuildTask
         if($this->forReal) {
             echo '<h4>Running for real!</h4>';
         } else {
-            echo '<h4>Test Only - <a href="?go=1'.$this->Link().'">run for real</a></h4>';
+            echo '<h4>Test Only - <a href="?go=1">run for real</a></h4>';
         }
         $i = 0;
         while($i < 10) {
@@ -50,7 +50,7 @@ class UrlSegmentFixer extends BuildTask
                     foreach($others as $other) {
                         $hasOthers = true;
                         DB::alteration_message(
-                            '... can not be changed because is an existing page with '.$cleanUrlSement.': '
+                            '... can not be changed because is an existing page with '.$cleanUrlSegment.': '
                             . $this->pageObjectToLink($other)
                         );
                     }
