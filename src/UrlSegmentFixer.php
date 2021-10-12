@@ -4,16 +4,11 @@ namespace Sunnysideup\DuplicateURLSegments;
 
 
 
-
-use Nedc\App\Categories\ResourceArticleType;
-use Nedc\App\Model\ResearchResource;
-use SilverStripe\Assets\File;
 use SilverStripe\Control\Director;
 use SilverStripe\Dev\BuildTask;
 use SilverStripe\ORM\DataObject;
-use SilverStripe\ORM\FieldType\DBDate;
 use SilverStripe\ORM\DB;
-use SilverStripe\Security\Member;
+
 
 use SilverStripe\CMS\Model\SiteTree;
 
