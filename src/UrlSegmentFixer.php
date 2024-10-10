@@ -11,15 +11,28 @@ use SilverStripe\View\Parsers\URLSegmentFilter;
 
 class UrlSegmentFixer extends BuildTask
 {
-    protected $title = 'Remove -2 from URLSegment';
+    protected $title = 'Remove -2, -3, -4, -5, etc... from URLSegment';
 
-    protected $description = 'Remove the -2 from the URLSegments on the website.';
+    protected $description = 'Removes unnecessary appendixes from Page URLSegments';
 
     protected $enabled = true;
 
     protected $forReal = false;
+    protected $max = 9;
 
     private static $segment = 'urlsegmentfixer';
+
+    public function setForReal(bool $b)
+    {
+        $this->forReal = $b;
+        return $this;
+    }
+
+    public function setMax(int $max)
+    {
+        $this->max = $max;
+        return $this;
+    }
 
     public function run($request)
     {
@@ -34,28 +47,30 @@ class UrlSegmentFixer extends BuildTask
         }
 
         $i = 1;
-        while ($i < 999) {
+        while ($i < $this->max) {
             ++$i;
             $appendix = '-' . $i;
             $list = SiteTree::get()->filter(['URLSegment:EndsWith' => $appendix]);
             foreach ($list as $page) {
-                $cleanUrlSegment = $page->generateURLSegment($page->Title);
-                if ($cleanUrlSegment !== $page->URLSegment) {
-                    DB::alteration_message($this->pageObjectToLink($page));
-                    $others = SiteTree::get()->filter(['URLSegment' => $cleanUrlSegment, 'ParentID' => $page->ParentID]);
-                    $hasOthers = false;
-                    foreach ($others as $other) {
-                        $hasOthers = true;
-                        DB::alteration_message('... can not be changed because there is an existing page: '. $this->pageObjectToLink($other));
-                    }
+                $this->fixOnePage($page);
+            }
+        }
+    }
 
-                    if (false === $hasOthers && $this->forReal) {
-                        $page->URLSegment = $cleanUrlSegment;
-                        $page->writeToStage(Versioned::DRAFT);
-                        $page->publishRecursive();
-                        DB::alteration_message('... FIXED! ');
-                    }
+    public function fixOnePage($page)
+    {
+        $cleanUrlSegment = $page->generateURLSegment($page->Title);
+        if ($cleanUrlSegment !== $page->URLSegment) {
+            DB::alteration_message($this->pageObjectToLink($page));
+
+            if ($this->forReal) {
+                $page->URLSegment = $cleanUrlSegment;
+                $isPublished = $page->isPublished();
+                $page->writeToStage(Versioned::DRAFT);
+                if ($isPublished) {
+                    $page->publishSingle();
                 }
+                DB::alteration_message('... FIXED! ');
             }
         }
     }
@@ -63,8 +78,11 @@ class UrlSegmentFixer extends BuildTask
     protected function pageObjectToLink($page): string
     {
         if (Director::is_cli()) {
-            return $page->Title.':  '.$this->Link();
+            $v = $page->Link();
+        } else {
+            $v = '<a href="' . $page->CMSEditLink() . '">✎</a> <a href="' . $page->Link() . '">' . $page->Link() . ': ' . $page->Title . '</a>';
         }
-        return '<a href="' . $page->CMSEditLink() . '">✎</a> <a href="' . $page->Link() . '">' . $page->Title . '</a>';
+        return str_replace('?stage=Stage', '', $v);
     }
+
 }
