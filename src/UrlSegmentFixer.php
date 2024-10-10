@@ -45,7 +45,7 @@ class UrlSegmentFixer extends BuildTask
                     foreach ($others as $other) {
                         $hasOthers = true;
                         DB::alteration_message(
-                            '... can not be changed because is an existing page with ' . $cleanUrlSegment . ': '
+                            '... can not be changed because there is an existing page with ' . $cleanUrlSegment . ': '
                             . $this->pageObjectToLink($other)
                         );
                     }
