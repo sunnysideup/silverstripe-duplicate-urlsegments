@@ -3,9 +3,11 @@
 namespace Sunnysideup\DuplicateURLSegments;
 
 use SilverStripe\CMS\Model\SiteTree;
+use SilverStripe\Control\Director;
 use SilverStripe\Dev\BuildTask;
 use SilverStripe\ORM\DB;
 use SilverStripe\Versioned\Versioned;
+use SilverStripe\View\Parsers\URLSegmentFilter;
 
 class UrlSegmentFixer extends BuildTask
 {
@@ -31,23 +33,20 @@ class UrlSegmentFixer extends BuildTask
             echo '<h4>Test Only - <a href="?go=1">run for real</a></h4>';
         }
 
-        $i = 0;
-        while ($i < 10) {
+        $i = 1;
+        while ($i < 999) {
             ++$i;
             $appendix = '-' . $i;
             $list = SiteTree::get()->filter(['URLSegment:EndsWith' => $appendix]);
             foreach ($list as $page) {
-                $cleanUrlSegment = rtrim($page->URLSegment, $appendix);
+                $cleanUrlSegment = $page->generateURLSegment($page->Title);
                 if ($cleanUrlSegment !== $page->URLSegment) {
-                    DB::alteration_message($this->pageObjectToLink($page) . ' (' . $page->URLSegment . ') </strong> ');
+                    DB::alteration_message($this->pageObjectToLink($page));
                     $others = SiteTree::get()->filter(['URLSegment' => $cleanUrlSegment, 'ParentID' => $page->ParentID]);
                     $hasOthers = false;
                     foreach ($others as $other) {
                         $hasOthers = true;
-                        DB::alteration_message(
-                            '... can not be changed because there is an existing page with ' . $cleanUrlSegment . ': '
-                            . $this->pageObjectToLink($other)
-                        );
+                        DB::alteration_message('... can not be changed because there is an existing page: '. $this->pageObjectToLink($other));
                     }
 
                     if (false === $hasOthers && $this->forReal) {
@@ -56,17 +55,16 @@ class UrlSegmentFixer extends BuildTask
                         $page->publishRecursive();
                         DB::alteration_message('... FIXED! ');
                     }
-                } else {
-                    DB::alteration_message($this->pageObjectToLink($page) . ': could not decipher  => ' . $page->URLSegment);
                 }
-
-                echo '<br /><br />';
             }
         }
     }
 
     protected function pageObjectToLink($page): string
     {
+        if (Director::is_cli()) {
+            return $page->Title.':  '.$this->Link();
+        }
         return '<a href="' . $page->CMSEditLink() . '">✎</a> <a href="' . $page->Link() . '">' . $page->Title . '</a>';
     }
 }
