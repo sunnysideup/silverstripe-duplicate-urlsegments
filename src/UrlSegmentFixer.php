@@ -35,7 +35,7 @@ class UrlSegmentFixer extends BuildTask
         while ($i < 10) {
             ++$i;
             $appendix = '-' . $i;
-            $list = SiteTree::get()->filter(['URLSegment:PartialMatch' => $appendix]);
+            $list = SiteTree::get()->filter(['URLSegment:EndsWith' => $appendix]);
             foreach ($list as $page) {
                 $cleanUrlSegment = rtrim($page->URLSegment, $appendix);
                 if ($cleanUrlSegment !== $page->URLSegment) {
