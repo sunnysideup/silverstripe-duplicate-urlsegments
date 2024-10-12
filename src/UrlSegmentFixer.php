@@ -70,7 +70,12 @@ class UrlSegmentFixer extends BuildTask
                 if ($isPublished) {
                     $page->publishSingle();
                 }
-                DB::alteration_message('... FIXED! ');
+                $page = SiteTree::get()->byID($page->ID);
+                if ($page->URLSegment === $cleanUrlSegment) {
+                    DB::alteration_message('... FIXED! ');
+                } else {
+                    DB::alteration_message('... COULD NOT FIX! ');
+                }
             }
         }
     }
