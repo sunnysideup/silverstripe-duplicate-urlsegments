@@ -59,8 +59,9 @@ class UrlSegmentFixer extends BuildTask
 
     public function fixOnePage($page)
     {
+        $old = $page->URLSegment;
         $cleanUrlSegment = $page->generateURLSegment($page->Title);
-        if ($cleanUrlSegment !== $page->URLSegment) {
+        if ($cleanUrlSegment !== $old) {
             DB::alteration_message($this->pageObjectToLink($page));
 
             if ($this->forReal) {
@@ -72,9 +73,9 @@ class UrlSegmentFixer extends BuildTask
                 }
                 $page = SiteTree::get()->byID($page->ID);
                 if ($page->URLSegment === $cleanUrlSegment) {
-                    DB::alteration_message('... FIXED! ');
+                    DB::alteration_message('... FIXED! from ' . $old . ' to ' . $cleanUrlSegment, 'created');
                 } else {
-                    DB::alteration_message('... COULD NOT FIX! ');
+                    DB::alteration_message('... COULD NOT FIX from ' . $old . ' to ' . $cleanUrlSegment, 'deleted');
                 }
             }
         }
