@@ -7,7 +7,6 @@ use SilverStripe\Control\Director;
 use SilverStripe\Dev\BuildTask;
 use SilverStripe\ORM\DB;
 use SilverStripe\Versioned\Versioned;
-use SilverStripe\View\Parsers\URLSegmentFilter;
 
 class UrlSegmentFixer extends BuildTask
 {
@@ -18,6 +17,7 @@ class UrlSegmentFixer extends BuildTask
     protected $enabled = true;
 
     protected $forReal = false;
+
     protected $max = 9;
 
     private static $segment = 'urlsegmentfixer';
@@ -90,5 +90,4 @@ class UrlSegmentFixer extends BuildTask
         }
         return str_replace('?stage=Stage', '', $v);
     }
-
 }
