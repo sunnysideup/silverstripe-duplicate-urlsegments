@@ -10,7 +10,7 @@ use SilverStripe\Versioned\Versioned;
 
 class UrlSegmentFixer extends BuildTask
 {
-    protected $title = 'Remove -2, -3, -4, -5, etc... from URLSegment';
+    protected string $title = 'Remove -2, -3, -4, -5, etc... from URLSegment';
 
     protected $description = 'Removes unnecessary appendixes from Page URLSegments';
 
@@ -71,6 +71,7 @@ class UrlSegmentFixer extends BuildTask
                 if ($isPublished) {
                     $page->publishSingle();
                 }
+
                 $page = SiteTree::get()->byID($page->ID);
                 if ($page->URLSegment === $cleanUrlSegment) {
                     DB::alteration_message('... FIXED! from ' . $old . ' to ' . $cleanUrlSegment, 'created');
@@ -88,6 +89,7 @@ class UrlSegmentFixer extends BuildTask
         } else {
             $v = '<a href="' . $page->CMSEditLink() . '">✎</a> <a href="' . $page->Link() . '">' . $page->Link() . ': ' . $page->Title . '</a>';
         }
+
         return str_replace('?stage=Stage', '', $v);
     }
 }
