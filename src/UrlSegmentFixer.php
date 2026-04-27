@@ -3,16 +3,21 @@
 namespace Sunnysideup\DuplicateURLSegments;
 
 use SilverStripe\CMS\Model\SiteTree;
-use SilverStripe\Control\Director;
 use SilverStripe\Dev\BuildTask;
 use SilverStripe\ORM\DB;
+use SilverStripe\PolyExecution\PolyOutput;
 use SilverStripe\Versioned\Versioned;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 
 class UrlSegmentFixer extends BuildTask
 {
-    protected $title = 'Remove -2, -3, -4, -5, etc... from URLSegment';
+    protected string $title = 'Remove -2, -3, -4, -5, etc... from URLSegment';
 
-    protected $description = 'Removes unnecessary appendixes from Page URLSegments';
+    protected static string $description = 'Removes unnecessary appendixes from Page URLSegments';
+
+    protected static string $commandName = 'urlsegmentfixer';
 
     protected $enabled = true;
 
@@ -20,7 +25,13 @@ class UrlSegmentFixer extends BuildTask
 
     protected $max = 9;
 
-    private static $segment = 'urlsegmentfixer';
+    public function getOptions(): array
+    {
+        return [
+            new InputOption('go', 'g', InputOption::VALUE_NONE, 'Run for real (not just a test run)'),
+            new InputOption('max', 'm', InputOption::VALUE_REQUIRED, 'Maximum suffix number to check', 9),
+        ];
+    }
 
     public function setForReal(bool $b)
     {
@@ -34,16 +45,21 @@ class UrlSegmentFixer extends BuildTask
         return $this;
     }
 
-    public function run($request)
+    protected function execute(InputInterface $input, PolyOutput $output): int
     {
-        if ($request->getVar('go')) {
+        if ($input->getOption('go')) {
             $this->forReal = true;
         }
 
+        $maxOption = $input->getOption('max');
+        if ($maxOption !== null) {
+            $this->max = (int) $maxOption;
+        }
+
         if ($this->forReal) {
-            echo '<h4>Running for real!</h4>';
+            $output->writeln('<h4>Running for real!</h4>');
         } else {
-            echo '<h4>Test Only - <a href="?go=1">run for real</a></h4>';
+            $output->writeln('<h4>Test Only - add --go flag to run for real</h4>');
         }
 
         $i = 1;
@@ -52,7 +68,34 @@ class UrlSegmentFixer extends BuildTask
             $appendix = '-' . $i;
             $list = SiteTree::get()->filter(['URLSegment:EndsWith' => $appendix]);
             foreach ($list as $page) {
-                $this->fixOnePage($page);
+                $this->fixOnePageForExecute($page, $output);
+            }
+        }
+
+        return Command::SUCCESS;
+    }
+
+    protected function fixOnePageForExecute($page, PolyOutput $output)
+    {
+        $old = $page->URLSegment;
+        $cleanUrlSegment = $page->generateURLSegment($page->Title);
+        if ($cleanUrlSegment !== $old) {
+            $output->writeForHtml($this->pageObjectToLink($page));
+
+            if ($this->forReal) {
+                $page->URLSegment = $cleanUrlSegment;
+                $isPublished = $page->isPublished();
+                $page->writeToStage(Versioned::DRAFT);
+                if ($isPublished) {
+                    $page->publishSingle();
+                }
+
+                $page = SiteTree::get()->byID($page->ID);
+                if ($page->URLSegment === $cleanUrlSegment) {
+                    $output->writeln('... FIXED! from ' . $old . ' to ' . $cleanUrlSegment);
+                } else {
+                    $output->writeln('... COULD NOT FIX from ' . $old . ' to ' . $cleanUrlSegment);
+                }
             }
         }
     }
@@ -71,6 +114,7 @@ class UrlSegmentFixer extends BuildTask
                 if ($isPublished) {
                     $page->publishSingle();
                 }
+
                 $page = SiteTree::get()->byID($page->ID);
                 if ($page->URLSegment === $cleanUrlSegment) {
                     DB::alteration_message('... FIXED! from ' . $old . ' to ' . $cleanUrlSegment, 'created');
@@ -83,11 +127,9 @@ class UrlSegmentFixer extends BuildTask
 
     protected function pageObjectToLink($page): string
     {
-        if (Director::is_cli()) {
-            $v = $page->Link();
-        } else {
-            $v = '<a href="' . $page->CMSEditLink() . '">✎</a> <a href="' . $page->Link() . '">' . $page->Link() . ': ' . $page->Title . '</a>';
-        }
+        // @TODO (SS6 upgrade): Director::is_cli() removed - assuming CLI context in execute()
+        $v = $page->Link() . ': ' . $page->Title;
+
         return str_replace('?stage=Stage', '', $v);
     }
 }
