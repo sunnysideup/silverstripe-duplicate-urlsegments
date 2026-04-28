@@ -2,6 +2,7 @@
 
 namespace Sunnysideup\DuplicateURLSegments;
 
+use Override;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Dev\BuildTask;
 use SilverStripe\ORM\DB;
@@ -19,12 +20,13 @@ class UrlSegmentFixer extends BuildTask
 
     protected static string $commandName = 'urlsegmentfixer';
 
-    protected $enabled = true;
+    private static bool $is_enabled = true;
 
     protected $forReal = false;
 
     protected $max = 9;
 
+    #[Override]
     public function getOptions(): array
     {
         return [
