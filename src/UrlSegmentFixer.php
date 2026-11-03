@@ -4,6 +4,7 @@ namespace Sunnysideup\DuplicateURLSegments;
 
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Control\Director;
+use SilverStripe\Core\Convert;
 use SilverStripe\Dev\BuildTask;
 use SilverStripe\ORM\DB;
 use SilverStripe\Versioned\Versioned;
@@ -38,6 +39,14 @@ class UrlSegmentFixer extends BuildTask
     {
         if ($request->getVar('go')) {
             $this->forReal = true;
+        }
+
+        if ($this->forReal) {
+            if (! Director::is_cli()) {
+                echo 'This task can only be run on the command line.';
+
+                return;
+            }
         }
 
         if ($this->forReal) {
@@ -86,7 +95,7 @@ class UrlSegmentFixer extends BuildTask
         if (Director::is_cli()) {
             $v = $page->Link();
         } else {
-            $v = '<a href="' . $page->CMSEditLink() . '">✎</a> <a href="' . $page->Link() . '">' . $page->Link() . ': ' . $page->Title . '</a>';
+            $v = '<a href="' . Convert::raw2att($page->CMSEditLink()) . '">✎</a> <a href="' . Convert::raw2att($page->Link()) . '">' . Convert::raw2xml($page->Link() . ': ' . $page->Title) . '</a>';
         }
         return str_replace('?stage=Stage', '', $v);
     }
