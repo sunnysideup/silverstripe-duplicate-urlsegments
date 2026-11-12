@@ -11,6 +11,7 @@ use SilverStripe\Versioned\Versioned;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use SilverStripe\Control\Director;
 
 class UrlSegmentFixer extends BuildTask
 {
@@ -56,6 +57,12 @@ class UrlSegmentFixer extends BuildTask
         $maxOption = $input->getOption('max');
         if ($maxOption !== null) {
             $this->max = (int) $maxOption;
+        }
+
+        if ($this->forReal && ! Director::is_cli()) {
+            $output->writeln('This task can only be run on the command line.');
+
+            return Command::FAILURE;
         }
 
         if ($this->forReal) {
